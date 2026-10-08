@@ -1,0 +1,911 @@
+{
+  "version": 1,
+  "name": "Tavernenbarde – lebhaft",
+  "pen_up": 750,
+  "pen_down": 10,
+  "description": "Einlinige stilistische Nachzeichnung der Tavernenbarde-Bildprobe; fehlende Zeichen ergänzt.",
+  "glyphs": {
+    "!": {
+      "file": "U0021.gcode",
+      "advance": 6.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "(": {
+      "file": "U0028.gcode",
+      "advance": 9.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    ")": {
+      "file": "U0029.gcode",
+      "advance": 9.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    ",": {
+      "file": "U002C.gcode",
+      "advance": 4.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "-": {
+      "file": "U002D.gcode",
+      "advance": 12.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    ".": {
+      "file": "U002E.gcode",
+      "advance": 4.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "/": {
+      "file": "U002F.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "0": {
+      "file": "U0030.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "1": {
+      "file": "U0031.gcode",
+      "advance": 12.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "2": {
+      "file": "U0032.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "3": {
+      "file": "U0033.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "4": {
+      "file": "U0034.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "5": {
+      "file": "U0035.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "6": {
+      "file": "U0036.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "7": {
+      "file": "U0037.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "8": {
+      "file": "U0038.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "9": {
+      "file": "U0039.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    ":": {
+      "file": "U003A.gcode",
+      "advance": 4.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    ";": {
+      "file": "U003B.gcode",
+      "advance": 4.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "?": {
+      "file": "U003F.gcode",
+      "advance": 13.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "A": {
+      "file": "U0041.gcode",
+      "advance": 24.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "B": {
+      "file": "U0042.gcode",
+      "advance": 27.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "C": {
+      "file": "U0043.gcode",
+      "advance": 24.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "D": {
+      "file": "U0044.gcode",
+      "advance": 28.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "E": {
+      "file": "U0045.gcode",
+      "advance": 22.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "F": {
+      "file": "U0046.gcode",
+      "advance": 22.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "G": {
+      "file": "U0047.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "H": {
+      "file": "U0048.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "I": {
+      "file": "U0049.gcode",
+      "advance": 13.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "J": {
+      "file": "U004A.gcode",
+      "advance": 18.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "K": {
+      "file": "U004B.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "L": {
+      "file": "U004C.gcode",
+      "advance": 22.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "M": {
+      "file": "U004D.gcode",
+      "advance": 34.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "N": {
+      "file": "U004E.gcode",
+      "advance": 28.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "O": {
+      "file": "U004F.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "P": {
+      "file": "U0050.gcode",
+      "advance": 24.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "Q": {
+      "file": "U0051.gcode",
+      "advance": 27.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "R": {
+      "file": "U0052.gcode",
+      "advance": 27.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "S": {
+      "file": "U0053.gcode",
+      "advance": 27.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "T": {
+      "file": "U0054.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "U": {
+      "file": "U0055.gcode",
+      "advance": 27.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "V": {
+      "file": "U0056.gcode",
+      "advance": 28.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "W": {
+      "file": "U0057.gcode",
+      "advance": 36.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "X": {
+      "file": "U0058.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "Y": {
+      "file": "U0059.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "Z": {
+      "file": "U005A.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "a": {
+      "file": "U0061.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "b": {
+      "file": "U0062.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "c": {
+      "file": "U0063.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "d": {
+      "file": "U0064.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "e": {
+      "file": "U0065.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "f": {
+      "file": "U0066.gcode",
+      "advance": 13.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "g": {
+      "file": "U0067.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "h": {
+      "file": "U0068.gcode",
+      "advance": 18.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "i": {
+      "file": "U0069.gcode",
+      "advance": 9.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "j": {
+      "file": "U006A.gcode",
+      "advance": 10.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "k": {
+      "file": "U006B.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "l": {
+      "file": "U006C.gcode",
+      "advance": 10.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "m": {
+      "file": "U006D.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "n": {
+      "file": "U006E.gcode",
+      "advance": 18.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "o": {
+      "file": "U006F.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "p": {
+      "file": "U0070.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "q": {
+      "file": "U0071.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "r": {
+      "file": "U0072.gcode",
+      "advance": 13.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "s": {
+      "file": "U0073.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "t": {
+      "file": "U0074.gcode",
+      "advance": 12.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "u": {
+      "file": "U0075.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "v": {
+      "file": "U0076.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "w": {
+      "file": "U0077.gcode",
+      "advance": 24.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "x": {
+      "file": "U0078.gcode",
+      "advance": 15.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "y": {
+      "file": "U0079.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "z": {
+      "file": "U007A.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "©": {
+      "file": "U00A9.gcode",
+      "advance": 30.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "Ä": {
+      "file": "U00C4.gcode",
+      "advance": 24.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "Ö": {
+      "file": "U00D6.gcode",
+      "advance": 25.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "Ü": {
+      "file": "U00DC.gcode",
+      "advance": 27.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": true
+    },
+    "ß": {
+      "file": "U00DF.gcode",
+      "advance": 18.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "ä": {
+      "file": "U00E4.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "ö": {
+      "file": "U00F6.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "ü": {
+      "file": "U00FC.gcode",
+      "advance": 16.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": true,
+      "connect_out": true
+    },
+    "–": {
+      "file": "U2013.gcode",
+      "advance": 19.5,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    },
+    "‘": {
+      "file": "U2018.gcode",
+      "advance": 6.0,
+      "baseline": 0,
+      "origin_x": 0,
+      "main_strokes": [
+        0
+      ],
+      "connect_in": false,
+      "connect_out": false
+    }
+  }
+}
