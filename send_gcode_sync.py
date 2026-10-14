@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Send a pen-plotter job over USB, waiting for each acknowledgement separately."""
+"""Send a pen-plotter job over USB, optionally buffering consecutive moves."""
 
 from __future__ import annotations
 
 import argparse
+import codecs
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
 import math
@@ -13,7 +15,8 @@ import re
 import sys
 import time
 
-from text_to_gcode import PlotError, WORD, number, parse_gcode, strip_comments
+from text_to_gcode import FONT_ROOT, PlotError, Settings, WORD, load_font, number, parse_gcode, strip_comments
+from typewriter import Typewriter
 
 
 class StreamError(ValueError):
@@ -28,6 +31,45 @@ class ReturnHome(Exception):
 class Command:
     line: int
     text: str
+
+
+class PrintTimer:
+    """Report elapsed wall time once per second, without serial commands."""
+
+    def __init__(self, report=print, label: str = "Druckdauer"):
+        self.report = report
+        self.label = label
+        self.started = time.monotonic()
+        self.last_second = -1
+        self.finished = False
+        self.tick()
+
+    def elapsed(self) -> int:
+        return max(0, int(time.monotonic() - self.started))
+
+    @staticmethod
+    def format(seconds: int) -> str:
+        hours, remainder = divmod(seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+    def tick(self) -> None:
+        seconds = self.elapsed()
+        if not self.finished and seconds != self.last_second:
+            self.report(f"{self.label}: {self.format(seconds)}")
+            self.last_second = seconds
+
+    def finish(self) -> None:
+        if not self.finished:
+            self.report(f"{self.label} gesamt: {self.format(self.elapsed())}")
+            self.finished = True
+
+
+def timed_cancel(timer: PrintTimer, cancel=None):
+    def poll():
+        timer.tick()
+        return cancel() if cancel is not None else False
+    return poll
 
 
 def prepare_program(source: str) -> tuple[Command, ...]:
@@ -332,6 +374,73 @@ def stream(port, commands: tuple[Command, ...], timeout: float, report=print, ca
             report(f"Bestätigt: {index}/{len(commands)}")
 
 
+def stream_buffered(port, commands: tuple[Command, ...], timeout: float,
+                    report=print, cancel=None, rx_buffer: int = 120) -> None:
+    """Count unacknowledged bytes; queue only motion, drain before any barrier."""
+    if not isinstance(rx_buffer, int) or isinstance(rx_buffer, bool) or not 1 <= rx_buffer <= 120:
+        raise StreamError("Empfangsfenster muss zwischen 1 und 120 Bytes liegen")
+    blocks = []
+    for command in commands:
+        payload = (command.text + "\n").encode("ascii")
+        words = WORD.findall(command.text)
+        motion = ([float(value) for letter, value in words if letter == "G"] in ([0.], [1.])
+                  and any(letter in "XY" for letter, value in words)
+                  and all(letter in "GXYF" for letter, value in words))
+        if len(payload) > rx_buffer:
+            raise StreamError(f"Dateizeile {command.line}: Befehl größer als Empfangsfenster")
+        blocks.append((command, payload, motion))
+    pending = deque()
+    used = index = confirmed = 0
+    home_requested = False
+
+    def poll():
+        nonlocal home_requested
+        try:
+            return cancel() if cancel is not None else False
+        except ReturnHome:
+            home_requested = True
+            return False
+
+    while index < len(blocks) or pending:
+        check_abort(poll)
+        while not home_requested and index < len(blocks):
+            command, payload, motion = blocks[index]
+            # A pen command, pause, or modal change must be sent alone.
+            if pending and (not motion or not pending[-1][2]):
+                break
+            if motion and used + len(payload) > rx_buffer:
+                break
+            if pending and getattr(port, "in_waiting", 0):
+                break  # Observe available errors before writing more.
+            check_abort(poll)
+            if home_requested:
+                break
+            try:
+                write_bytes(port, payload)
+            except (StreamError, OSError) as error:
+                raise StreamError(f"Dateizeile {command.line} [{command.text}]: {error}") from error
+            pending.append((command, len(payload), motion))
+            used += len(payload)
+            index += 1
+            if not motion:
+                break
+        if pending:
+            command, size, motion = pending[0]
+            try:
+                # poll records ReturnHome without interrupting a partial answer.
+                # All queued acknowledgements must be drained before parking.
+                wait_ok(port, timeout, report, poll)
+            except (StreamError, OSError) as error:
+                raise StreamError(f"Dateizeile {command.line} [{command.text}]: {error}") from error
+            pending.popleft()
+            used -= size
+            confirmed += 1
+            if confirmed % 100 == 0 or confirmed == len(blocks):
+                report(f"Bestätigt: {confirmed}/{len(blocks)}")
+        if home_requested and not pending:
+            raise ReturnHome
+
+
 JOG_HELP = ("Pfeiltasten: X/Y fahren | 1: 0,1 mm | 2: 1 mm | 3: 10 mm\n"
             "U/Leertaste: Stift hoch | D: Stift runter | Z: hier X/Y null setzen (G54)\n"
             "Enter: Vorbereitung beenden / Datei starten | Q: Stift hoch und X0 Y0 | Esc: beenden")
@@ -339,15 +448,21 @@ JOG_HELP = ("Pfeiltasten: X/Y fahren | 1: 0,1 mm | 2: 1 mm | 3: 10 mm\n"
 
 class Keyboard:
     """Read single keys in a Windows or POSIX terminal, restoring its settings."""
+    def __init__(self):
+        self.decoder = codecs.getincrementaldecoder(sys.stdin.encoding or "utf-8")()
+
     def __enter__(self):
         if not sys.stdin.isatty():
-            raise StreamError("--jog benötigt ein interaktives Terminal")
+            raise StreamError("Tastaturmodus benötigt ein interaktives Terminal")
         if os.name != "nt":
             import termios
             import tty
             self.fd = sys.stdin.fileno()
             self.saved = termios.tcgetattr(self.fd)
             tty.setcbreak(self.fd)
+            active = termios.tcgetattr(self.fd)
+            active[0] &= ~termios.IXON  # Ctrl+Q must reach the typewriter.
+            termios.tcsetattr(self.fd, termios.TCSANOW, active)
         return self
 
     def __exit__(self, *args):
@@ -355,7 +470,7 @@ class Keyboard:
             import termios
             termios.tcsetattr(self.fd, termios.TCSADRAIN, self.saved)
 
-    def read_key(self, timeout=None):
+    def read_key(self, timeout=None, *, preserve_case=False):
         if os.name == "nt":
             import msvcrt
             if timeout is not None and not msvcrt.kbhit():
@@ -365,11 +480,15 @@ class Keyboard:
                 return {"H": "up", "P": "down", "K": "left", "M": "right"}.get(msvcrt.getwch(), "")
         else:
             import select
-            if timeout is not None and not select.select([self.fd], [], [], timeout)[0]:
-                return None
-            key = os.read(self.fd, 1).decode("ascii", errors="ignore")
-            if not key:
-                raise StreamError("Tastatur-Terminal wurde geschlossen")
+            while True:
+                if timeout is not None and not select.select([self.fd], [], [], timeout)[0]:
+                    return None
+                byte = os.read(self.fd, 1)
+                if not byte:
+                    raise StreamError("Tastatur-Terminal wurde geschlossen")
+                key = self.decoder.decode(byte)
+                if key:
+                    break
             if key == "\x1b":
                 sequence = ""
                 for _ in range(2):
@@ -381,7 +500,7 @@ class Keyboard:
                             "OA": "up", "OB": "down", "OC": "right", "OD": "left"}.get(sequence, "")
         if key == "\x03":
             raise KeyboardInterrupt
-        return {"\r": "enter", "\n": "enter", "\x1b": "escape"}.get(key, key.lower())
+        return {"\r": "enter", "\n": "enter", "\x1b": "escape"}.get(key, key if preserve_case else key.lower())
 
     def discard_pending(self):
         # Do not accumulate key repeats while a step is in progress.
@@ -392,6 +511,7 @@ class Keyboard:
         else:
             import termios
             termios.tcflush(self.fd, termios.TCIFLUSH)
+        self.decoder.reset()
 
 
 @contextmanager
@@ -450,6 +570,79 @@ def jog_session(port, timeout: float, keyboard, jog_speed: float = 600., report=
             return key == "enter"
 
 
+TYPEWRITER_HELP = ("Schreibmaschine: Zeichen sofort schreiben | Leerzeichen: weiter | Enter: neue Zeile links\n"
+                   "Strg+Q: Stift hoch, X0 Y0 und beenden | Esc/Strg+C: Bewegungsstopp\n"
+                   "Q schreibt einen Buchstaben. Rücktaste kann geschriebene Zeichen nicht löschen.")
+
+
+def typewriter_session(port, timeout: float, keyboard, writer: Typewriter,
+                       tolerance: float = 0., report=print, *, buffered: bool = False,
+                       rx_buffer: int = 120, timer: PrintTimer | None = None) -> None:
+    pending = deque()
+
+    def cancel():
+        if timer is not None:
+            timer.tick()
+        key = keyboard.read_key(timeout=0, preserve_case=True)
+        if key == "\x11":
+            raise ReturnHome
+        if key == "escape":
+            return True
+        if key:
+            if len(pending) >= 4096:
+                raise StreamError("Tastaturpuffer voll; Übertragung angehalten")
+            pending.append(key)
+        return False
+
+    report(TYPEWRITER_HELP)
+    report(f"Dokument: {number(writer.settings.width)} × {number(writer.settings.height)} mm; "
+           "oben links X0 Y0, rechts +X, nach unten −Y")
+    initial = (Command(1, "G54"),) + zero_commands(writer.settings.travel_speed)
+    stream(port, initial, timeout, lambda _: None, cancel)
+    wait_finished(port, timeout, report, cancel)
+    while True:
+        if timer is not None:
+            timer.tick()
+        key = pending.popleft() if pending else keyboard.read_key(
+            timeout=.1 if timer is not None else None, preserve_case=True)
+        if key == "\x11":
+            raise ReturnHome
+        if key == "escape":
+            raise KeyboardInterrupt
+        if not key:
+            if timer is not None:
+                time.sleep(.05)  # Windows nonblocking keyboard must not busy-spin.
+            continue
+        if key not in ("enter", " ") and (len(key) != 1 or not key.isprintable()):
+            report("Taste ignoriert; bereits geschriebene Zeichen können nicht gelöscht werden")
+            continue
+        try:
+            plan = writer.plan(key)
+        except PlotError as error:
+            report(f"Nicht geschrieben: {error}")
+            continue
+        # Space and newline contain no drawing; their safe moves are generated
+        # by the planner rather than read from a user GCODE file.
+        if key in ("enter", " "):
+            commands = tuple(Command(i, line) for i, line in enumerate(plan.source.splitlines(), 1))
+        else:
+            commands = simplify_program(plan.source, tolerance) if tolerance else prepare_program(plan.source)
+        if buffered:
+            if key not in ("enter", " "):
+                # The initial positioning and previous character both end pen-up.
+                # Their modal state is already G21/G90/G94. Avoid repeating its
+                # setup and an extra pen-up pause for every character.
+                commands = commands[5:]
+            stream_buffered(port, commands, timeout, lambda _: None, cancel, rx_buffer)
+        else:
+            stream(port, commands, timeout, lambda _: None, cancel)
+        if not buffered or not pending:
+            wait_finished(port, timeout, report, cancel)
+        writer.commit(plan)
+        report(f"{'Übertragen' if buffered else 'Geschrieben'}: {key!r}; "
+               f"Zeile {writer.cursor.row + 1}, X {number(round(writer.cursor.x, 4))} mm")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=Path, nargs="?", help="Plotter-GCODE mit S750/S10")
@@ -460,6 +653,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="Mindestwartezeit beim Verbinden in Sekunden (Standard: 5)")
     parser.add_argument("--list-ports", action="store_true", help="Ports auflisten, nicht verbinden")
     parser.add_argument("--check", action="store_true", help="Nur Datei prüfen, nicht verbinden")
+    parser.add_argument("--buffered", action="store_true",
+                        help="Fahrbefehle mit Bytezählung puffern, für flüssigere Ausgabe")
+    parser.add_argument("--rx-buffer", type=int, default=120,
+                        help="Empfangsfenster für --buffered in Bytes (1–120; Standard: 120)")
     parser.add_argument("--simplify", type=float, default=0., metavar="MM",
                         help="Zeichenwege mit maximal MM Abweichung vereinfachen (z. B. 0.02; 0 = aus)")
     parser.add_argument("--zero", action="store_true",
@@ -472,10 +669,30 @@ def main(argv: list[str] | None = None) -> int:
                         help="Position per Tastatur ausrichten, optional vor einer Datei")
     parser.add_argument("--jog-speed", type=float, default=600.,
                         help="Tastatur-Fahrvorschub in mm/min (Standard: 600 = 10 mm/s)")
+    parser.add_argument("--typewriter", action="store_true", help="Tastatur als Schreibmaschine; X0 Y0 ist oben links")
+    parser.add_argument("--font", type=Path, default=FONT_ROOT / "tavernenbarde", help="Schrift für --typewriter")
+    for option, default, description in (
+        ("scale", .14, "Schriftmaßstab"), ("width", 210., "Dokumentbreite in mm ab X0"),
+        ("height", 297., "Dokumenthöhe in mm nach unten ab Y0"),
+        ("line-spacing", 60., "Zeilenabstand vor Skalierung"),
+        ("character-spacing", .5, "Zeichenabstand vor Skalierung"),
+        ("word-spacing", 12., "Leerzeichenvorschub vor Skalierung"),
+        ("write-speed", 24000., "Schreibvorschub in mm/min"),
+        ("dwell", .15, "Stiftpause in Sekunden"),
+    ):
+        parser.add_argument(f"--{option}", type=float, default=default, help=f"Für --typewriter: {description}")
     args = parser.parse_args(argv)
+    if not 1 <= args.rx_buffer <= 120:
+        parser.error("--rx-buffer muss zwischen 1 und 120 liegen")
+    if not args.buffered and args.rx_buffer != 120:
+        parser.error("--rx-buffer gilt nur für --buffered")
+    if args.buffered and (args.list_ports or args.zero or args.outline or (args.file is None and not args.typewriter)):
+        parser.error("--buffered benötigt einen Schreibjob oder --typewriter")
+    if args.typewriter and (args.file is not None or args.zero or args.outline or args.list_ports):
+        parser.error("--typewriter nicht mit Datei, --zero, --outline oder --list-ports kombinieren")
     if not math.isfinite(args.simplify) or args.simplify < 0:
         parser.error("--simplify muss endlich und nicht negativ sein")
-    if args.simplify and (args.file is None or args.outline or args.list_ports):
+    if args.simplify and ((args.file is None and not args.typewriter) or args.outline or args.list_ports):
         parser.error("--simplify benötigt einen Schreibjob und gilt nicht für --outline/--list-ports")
     if (args.baud <= 0 or not math.isfinite(args.timeout) or args.timeout <= 0
             or not math.isfinite(args.startup_wait) or args.startup_wait <= 0):
@@ -491,14 +708,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.zero and (args.file is not None or args.list_ports):
         parser.error("--zero nicht mit einer Datei oder --list-ports kombinieren")
     if not args.zero and args.travel_speed != 6000.:
-        if not args.outline:
+        if not args.outline and not args.typewriter:
             parser.error("--travel-speed gilt nur für --zero/--outline; Dateivorschübe stehen im GCODE")
     if args.outline and (args.file is None or args.zero or args.list_ports):
         parser.error("--outline benötigt eine Datei und ist nicht mit --zero/--list-ports kombinierbar")
-    if not args.list_ports and ((args.file is None and not args.zero and not args.jog) or (not args.check and not args.port)):
+    if not args.list_ports and ((args.file is None and not args.zero and not args.jog and not args.typewriter) or (not args.check and not args.port)):
         parser.error("Datei, --zero oder --jog und --port angeben; alternativ --list-ports oder --check")
-    if args.jog and not args.check and not sys.stdin.isatty():
-        parser.error("--jog benötigt ein interaktives Terminal")
+    if (args.jog or args.typewriter) and not args.check and not sys.stdin.isatty():
+        parser.error("--jog/--typewriter benötigt ein interaktives Terminal")
     try:
         if args.list_ports:
             from serial.tools import list_ports
@@ -509,6 +726,13 @@ def main(argv: list[str] | None = None) -> int:
                 print("Keine seriellen Ports gefunden")
             return 0
         source = args.file.read_text(encoding="utf-8-sig") if args.file is not None else None
+        writer = None
+        if args.typewriter:
+            writer = Typewriter(load_font(args.font), Settings(
+                width=args.width, height=args.height, margin=0, x=0, y=0,
+                scale=args.scale, line_spacing=args.line_spacing,
+                character_spacing=args.character_spacing, word_spacing=args.word_spacing,
+                write_speed=args.write_speed, travel_speed=args.travel_speed, dwell=args.dwell))
         if args.outline:
             commands, (xmin, ymin, xmax, ymax) = outline_commands(source, args.travel_speed)
             print(f"Schreibbereich: X {number(xmin)} bis {number(xmax)}, "
@@ -518,17 +742,25 @@ def main(argv: list[str] | None = None) -> int:
         else:
             commands = zero_commands(args.travel_speed) if args.zero else (
                 prepare_program(source) if source is not None else ())
-            if args.simplify:
+            if args.simplify and not args.typewriter:
                 original_count = len(commands)
                 commands = simplify_program(source, args.simplify)
                 print(f"Vereinfacht: {original_count} auf {len(commands)} Befehle; "
                       f"maximale Pfadabweichung {number(args.simplify)} mm")
         if args.check:
-            print(f"Geprüft: {len(commands)} Plotterbefehle; keine USB-Verbindung geöffnet")
+            if args.buffered:
+                print(f"Gepufferte Übertragung: Empfangsfenster {args.rx_buffer} Bytes")
+            if args.typewriter:
+                print("Schreibmaschineneinstellungen geprüft; keine USB-Verbindung geöffnet")
+            else:
+                print(f"Geprüft: {len(commands)} Plotterbefehle; keine USB-Verbindung geöffnet")
             if args.zero or args.outline:
                 print("\n".join(command.text for command in commands))
             if args.jog:
                 print(JOG_HELP)
+            if args.typewriter:
+                print(f"Schrift geprüft: {args.font}; {len(writer.font)} Zeichen; Dokument oben links X0 Y0")
+                print(TYPEWRITER_HELP)
             return 0
         import serial
         connection = serial.Serial(port=None, baudrate=args.baud, timeout=.1, write_timeout=5)
@@ -538,6 +770,7 @@ def main(argv: list[str] | None = None) -> int:
             connection.exclusive = True
         connection.port = args.port
         started = False
+        timer = None
         try:
             connection.open()
             print(f"USB: {args.port}, {args.baud} Baud; warte auf den Controller")
@@ -548,17 +781,31 @@ def main(argv: list[str] | None = None) -> int:
                     if args.outline:
                         print("Nach dem Ausrichten startet Enter nur die Randprüfung, keinen Schreibjob.")
                     proceed = jog_session(connection, args.timeout, keyboard, args.jog_speed)
-                if not proceed or not commands:
+                if not proceed or (not commands and not args.typewriter):
                     started = False
                     print("Tastaturmodus beendet; Controller ist Idle, Stift oben")
                     return 0
+            timer = PrintTimer(label="Randprüfungsdauer" if args.outline else (
+                "Fahrtdauer" if args.zero else "Druckdauer"))
+            if args.typewriter:
+                with Keyboard() as keyboard:
+                    typewriter_session(connection, args.timeout, keyboard, writer, args.simplify,
+                                       buffered=args.buffered, rx_buffer=args.rx_buffer, timer=timer)
             with abort_keys() as cancel:
-                stream(connection, commands, args.timeout, cancel=cancel)
+                cancel = timed_cancel(timer, cancel)
+                if args.buffered:
+                    stream_buffered(connection, commands, args.timeout, cancel=cancel, rx_buffer=args.rx_buffer)
+                else:
+                    stream(connection, commands, args.timeout, cancel=cancel)
                 wait_finished(connection, args.timeout, cancel=cancel)
+                if args.file is not None and not args.outline:
+                    print("Schreibjob abgeschlossen; Stift anheben und nach X0 Y0 zurückfahren")
+                    stream(connection, zero_commands(), args.timeout, cancel=cancel)
+                    wait_finished(connection, args.timeout, cancel=cancel)
             started = False
             print("Randprüfung abgeschlossen; zurück bei X0 Y0, Stift oben" if args.outline else (
                 "Arbeitsnullpunkt X0 Y0 erreicht; Controller ist Idle, Stift oben" if args.zero
-                else "Alle Befehle bestätigt; Controller ist Idle, Stift oben"))
+                else "Schreibjob abgeschlossen; zurück bei X0 Y0, Controller ist Idle, Stift oben"))
             return 0
         except ReturnHome:
             # Keep Esc/Ctrl+C available during parking; another Q is ignored.
@@ -569,7 +816,8 @@ def main(argv: list[str] | None = None) -> int:
                     except ReturnHome:
                         return False
                 # Forward the emergency callback through the parking sequence.
-                finish_and_return_home(connection, args.timeout, cancel=stop_only)
+                parking_cancel = timed_cancel(timer, stop_only) if timer is not None else stop_only
+                finish_and_return_home(connection, args.timeout, cancel=parking_cancel)
             started = False
             return 0
         finally:
@@ -581,7 +829,11 @@ def main(argv: list[str] | None = None) -> int:
                     except OSError as error:
                         print(f"Feed Hold konnte nicht übertragen werden: {error}")
             finally:
-                connection.close()
+                try:
+                    connection.close()
+                finally:
+                    if timer is not None:
+                        timer.finish()
     except ModuleNotFoundError as error:
         if error.name in ("serial", "serial.tools"):
             parser.exit(2, "pyserial fehlt: python3 -m pip install pyserial\n")
